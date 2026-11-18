@@ -1,11 +1,12 @@
 # Gemeinsam weiterentwickeln
 
-1. Repository forken (oder nach angenommener Einladung direkt klonen).
-2. Einen Branch für eine konkrete Änderung anlegen.
-3. Änderungen umsetzen und im Pull Request verständlich beschreiben.
-4. Nach Ergänzung des vollständigen Projekts die dort dokumentierten Build- und Testbefehle ausführen; Ergebnisse im Pull Request nennen.
-5. Pull Request gegen `main` öffnen und gemeinsam prüfen.
+1. Repository forken oder nach angenommener Einladung klonen.
+2. Mit Node.js 22.12+ (empfohlen 24) `npm ci` ausführen.
+3. Branch anlegen: `git switch -c feature/meine-aenderung`.
+4. Mit `npm run dev` entwickeln; auch schmale Fenster prüfen.
+5. `npm test` und `npm run build` ausführen. Upload und Speicherung bei Änderungen auch nach einem Neuladen prüfen.
+6. Committen, Branch pushen und Pull Request gegen `main` öffnen. Verhalten und Prüfergebnisse beschreiben.
 
-Bitte keine Zugangsdaten oder privaten Uploads einchecken. Quellen und Nutzungsrechte von Bildern dokumentieren.
+Keine Zugangsdaten oder privaten Medien einchecken. Quellen und Nutzungsrechte dokumentieren. GitHub Actions prüft Build und Speichertests automatisch.
 
-Die erste Aufgabe ist das Ergänzen des vollständigen Projekt-Exports. Bitte keine fehlenden Originalkomponenten als bereits vorhanden oder getestet ausgeben.
+Für direkte Mitarbeit lädt Patrick bekannte GitHub-Accounts unter Settings → Collaborators → Add people ein. Einladungen müssen angenommen werden. Ohne Einladung sind Forks und Pull Requests möglich.

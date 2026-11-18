@@ -1,41 +1,57 @@
 # Stasi-Zentrale: 1989 und heute
 
-Gemeinsame Weiterentwicklung mit Naina und externen Mitwirkenden.
+Lauffähige React-/TypeScript-Anwendung für Bildvergleiche, Buchbezug und einen Medienabschnitt mit einem Video und zwei Bildern. Fehlende Komponenten wurden für dieses eigenständige Projekt neu implementiert.
 
-## Aktueller Stand
+## Lokal starten
 
-`index.tsx` (vorgesehener Zielpfad im vollständigen Projekt: `src/routes/index.tsx`) ist die unveränderte, bereitgestellte Originaldatei. Sie enthält die Startseite mit Buchbezug, Medienabschnitt und Damals-Heute-Vergleichen.
+Voraussetzung: Node.js 22.12+ (empfohlen 24) und npm.
 
-**Dies ist noch keine eigenständig lauffähige Anwendung.** Die einzelne TSX-Datei ist kein vollständiger Lovable-Export. Build und Tests sind deshalb derzeit nicht möglich.
+```sh
+git clone https://github.com/PatrickFischerKSA/stasi-zentrale-bildvergleich.git
+cd stasi-zentrale-bildvergleich
+npm ci
+npm run dev
+```
 
-## Fehlende Bestandteile
+Die von Vite angezeigte Adresse öffnen. Keine API-Schlüssel, Konten oder Datenbankserver nötig.
 
-- `src/components/ui/button.tsx`
-- `src/components/comparison/ComparisonCard.tsx`
-- `src/components/sections/BookSection.tsx`
-- `src/components/sections/MediaSection.tsx`
-- `src/lib/comparison-store.ts`
-- Router-Einrichtung, App-Einstieg, CSS/Theme und Bilddateien
-- `package.json`, Lockfile, TypeScript- und Build-Konfiguration
+```sh
+npm test        # Datenmigration und IndexedDB-Speicherung prüfen
+npm run build   # TypeScript prüfen und Produktionsbuild erstellen
+npm run preview # fertigen Build lokal öffnen
+```
 
-Verwendete Bibliotheken: React, TypeScript, TanStack React Router, lucide-react und sonner. Die Klassen setzen außerdem passende Utility-CSS- und Theme-Konfiguration voraus.
+`dist/` enthält die statisch hostbare Anwendung. Relative Asset-Pfade erlauben Hosting in Unterverzeichnissen. GitHub Actions prüft Pull Requests und Änderungen auf `main`. Alternativ mit **Code → Codespaces** öffnen, `npm ci` und `npm run dev -- --host 0.0.0.0` ausführen und Port 5173 öffnen.
 
-## Mitmachen
+## Funktionen
 
-Dieses öffentliche Repository kann von Naina und anderen geforkt werden. Änderungen auf einem eigenen Branch vornehmen und anschließend einen Pull Request an dieses Repository öffnen. Dafür ist keine Einladung notwendig.
+- Überschrift, Einleitung, Buchdaten, Quellen und Anmerkungen bearbeiten
+- Bilder und Video per Dateiauswahl oder Drag-and-drop einfügen
+- Bildvergleich mit Regler oder nebeneinander
+- Vergleiche hinzufügen und nach Bestätigung löschen
+- Automatische lokale Speicherung in IndexedDB, auch für Medien
+- Drucken/PDF und Zurücksetzen mit Bestätigung
 
-Für direkte Änderungen im gemeinsamen Repository lädt Patrick die gewünschten GitHub-Accounts unter **Settings → Collaborators → Add people** ein. Einladungen müssen angenommen werden. Der Name „Naina“ allein identifiziert keinen GitHub-Account.
+Keine historischen Fotos mitgeliefert. Eigene Bilder mit Quellen und Nutzungsrechten ergänzen. Bilder bis 15 MB, Video bis 100 MB; Speicherplatz und Videoformate hängen vom Browser ab.
 
-Siehe [CONTRIBUTING.md](CONTRIBUTING.md) für den Ablauf.
+## Gemeinsam entwickeln
 
-## Nächster Schritt
+Naina und andere können dieses öffentliche Repository forken und Pull Requests stellen. Direkten Schreibzugriff kann der Eigentümer unter **Settings → Collaborators → Add people** für bekannte GitHub-Accounts einrichten. Siehe [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Den vollständigen Quellcode aus dem ursprünglichen Lovable-Projekt exportieren und die fehlenden Dateien ergänzen. Dabei die vorhandene Startseite mit dem Export abgleichen. Erst danach die im vollständigen Projekt definierten Installations-, Build- und Testbefehle ausführen.
+## Projektstruktur
 
-Ursprüngliches Lovable-Projekt: https://lovable.dev/projects/ddffdfb8-2842-58f2-bd72-39af9c168784
+- `src/routes/index.tsx`: Startseite und Aktionen
+- `src/components/comparison/ComparisonCard.tsx`: Vergleich und Metadaten
+- `src/components/sections/`: Buchbezug und Medien
+- `src/components/MediaUpload.tsx`: Dateiprüfung und Vorschau
+- `src/lib/comparison-store.ts`: Datenmodell, Normalisierung und IndexedDB
+- `src/styles.css`: Tailwind-Theme und Druckansicht
+- `reference/index.original.tsx`: unveränderte ursprünglich gelieferte Datei
 
-Dieses neue Repository ist unabhängig vom ursprünglichen Repository und besitzt keine automatische Lovable-Synchronisierung.
+Die Startseite wird direkt eingebunden und benötigt keinen Router. Die Routenmetadaten wurden in `index.html` überführt.
 
 ## Speicherung
 
-Die Startseite sieht lokale Speicherung im Browser vor. Ein GitHub-Repository synchronisiert keine von Besuchern im Browser hochgeladenen Bilder, Videos oder Texte.
+Texte und Medien bleiben in diesem Browser auf diesem Gerät. Löschen von Browserdaten entfernt sie. GitHub versioniert den Code, nicht die Eingaben der Besucher. Gemeinsame Inhaltsbearbeitung und geräteübergreifende Synchronisierung benötigen ein Backend und sind nicht enthalten. Inhalte der ursprünglichen Lovable-Domain werden nicht automatisch übernommen.
+
+Dieses Repository ist unabhängig vom [ursprünglichen Lovable-Projekt](https://lovable.dev/projects/ddffdfb8-2842-58f2-bd72-39af9c168784) und hat keine automatische Lovable-Synchronisierung.

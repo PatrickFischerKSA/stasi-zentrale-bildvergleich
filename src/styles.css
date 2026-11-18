@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@theme { --color-background:#f3eee3; --color-ink:#191612; --color-ink-foreground:#f7f3eb; --color-primary:#b52922; --color-muted-foreground:#6b6257; --color-input:#bdb3a3; --color-era-past:#8a4131; --color-era-now:#416152; --font-display:Georgia,"Times New Roman",serif; }
+@layer base { body { margin:0; background:var(--color-background); color:var(--color-ink); font-family:Arial,sans-serif; } button, input[type=range] { cursor:pointer; } textarea,input { max-width:100%; } :focus-visible { outline:2px solid var(--color-primary); outline-offset:4px; } }
+@layer components { .field { width:100%; background:transparent; border-bottom:1px dashed var(--color-input); padding: .35rem 0; } .file-label { font-family:monospace; font-size:.72rem; text-transform:uppercase; letter-spacing:.13em; } .stamp { display:inline-block; border:1px solid currentColor; padding:.35rem .6rem; font-family:monospace; font-size:.75rem; text-transform:uppercase; letter-spacing:.12em; } .panel { border:1px solid var(--color-input); padding:clamp(1rem,3vw,2rem); background:#ffffff30; } .empty-slot { background:#ffffff25; } }
+@media print { body{background:white;font-size:11pt} textarea{resize:none} article,section{break-inside:avoid} input,textarea{border:0!important} button,input[type=file],input[type=range]{display:none!important} .comparison-images{height:300px!important} }
+
+textarea.field { field-sizing: content; overflow-wrap: anywhere; }
+@media(max-width:640px) { header textarea[aria-label="Überschrift"] { font-size:2.5rem; } }
