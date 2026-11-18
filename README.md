@@ -2,6 +2,12 @@
 
 Lauffähige React-/TypeScript-Anwendung für Bildvergleiche, Buchbezug und einen Medienabschnitt mit einem Video und zwei Bildern. Fehlende Komponenten wurden für dieses eigenständige Projekt neu implementiert.
 
+## Im Browser ausprobieren
+
+https://patrickfischerksa.github.io/stasi-zentrale-bildvergleich/
+
+GitHub Pages veröffentlicht nach erfolgreichen Tests und Build jede Änderung auf `main` automatisch. Eingaben und Medien bleiben im Browser der jeweiligen Person.
+
 ## Lokal starten
 
 Voraussetzung: Node.js 22.12+ (empfohlen 24) und npm.
