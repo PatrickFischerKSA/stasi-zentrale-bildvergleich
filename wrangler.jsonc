@@ -1,0 +1,9 @@
+{
+  "name": "stasi-zentrale-gemeinsam",
+  "main": "worker/index.mjs",
+  "account_id": "22a2c05c1bf9bca855767eb6dad549c2",
+  "compatibility_date": "2026-11-18",
+  "workers_dev": true,
+  "d1_databases": [{"binding":"DB","database_name":"stasi-zentrale-gemeinsam","database_id":"5c9a8634-d138-42b8-8eab-dce0f1515072","migrations_dir":"worker/migrations"}],
+  "r2_buckets": [{"binding":"MEDIA","bucket_name":"stasi-zentrale-medien"}]
+}
