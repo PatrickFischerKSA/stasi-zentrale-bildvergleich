@@ -83,3 +83,13 @@ Backend-Deployments erfolgen bewusst über einen autorisierten Cloudflare-Accoun
 Entfernte Medien werden aus der Ansicht entfernt; gespeicherte Medien bleiben für frühere Versionen im Bucket verfügbar. Unterstützte Dateien: JPG, PNG, WebP, GIF, AVIF sowie MP4, WebM, MOV und OGG. Bilder maximal 15 MB, Videos maximal 60 MB.
 
 Dieses Repository ist unabhängig vom ursprünglichen Lovable-Projekt und hat keine automatische Lovable-Synchronisierung.
+
+## Projektverwaltung im Browser
+
+Der bisherige Bearbeitungslink bleibt unverändert. Über **Projekt verwalten** können Mitwirkende Unterseiten erstellen, umbenennen, sortieren und entfernen. Jede neue Seite wird automatisch in die Navigation aufgenommen. Unter **Navigation** lassen sich Menüeinträge unabhängig sortieren, umbenennen, ausblenden, entfernen und auf Seiten, externe Webadressen oder vorhandene `#abschnitt`-Ziele verweisen.
+
+Unterseiten und die Startseite lassen sich mit Text-, Überschriften-, Bild-, Video-, Zitat- und Trennlinien-Bausteinen aufbauen. Bausteine können umgeordnet und entfernt werden; Medien werden im eigenen Projektspeicher abgelegt. Unter **Startseite umbauen** lassen sich die vorhandenen Originalabschnitte sortieren und ausblenden. Ausgeblendete Inhalte werden nicht gelöscht. Die Abschnittsauswahl erscheint nach dem Laden der Startseite.
+
+Alle Änderungen speichern automatisch für alle. Vor dem Schliessen auf die Speicherbestätigung warten. Konflikte am selben Feld müssen aufgelöst werden. Frühere Fassungen stehen im Versionsverlauf bereit. Alte gespeicherte Stände erhalten automatisch eine Startseite, bestehende redaktionelle Inhalte bleiben bestehen. Auch ältere noch offene Browserfassungen können die neue Seitenverwaltung beim Speichern nicht entfernen.
+
+Seiten-Direktlinks verwenden `?page=<feste-id>` und bleiben beim Umbenennen gültig. Der Ansichtslink enthält keinen Bearbeitungsschlüssel. Aus dem Menü ausgeblendete Seiten bleiben über ihren Direktlink erreichbar. Die Projektverwaltung gibt keinen Zugriff auf ChatGPT, Codex, Lovable, Abonnements oder KI-Konten.

@@ -1,3 +1,4 @@
+import {validSite} from './site-schema.mjs';
 const ORIGINS = new Set(['https://patrickfischerksa.github.io','http://127.0.0.1:5178','http://127.0.0.1:5173','http://localhost:5173']);
 const TYPES = new Set(['image/jpeg','image/png','image/webp','image/gif','image/avif','video/mp4','video/webm','video/quicktime','video/ogg']);
 function json(body, status=200) {return Response.json(body,{status,headers:{'Cache-Control':'no-store'}});}
@@ -7,7 +8,8 @@ async function authorized(request,env) {
  const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token)))).map(x=>x.toString(16).padStart(2,'0')).join('');
  return hash===env.EDIT_TOKEN_HASH;
 }
-function validState(s,origin) {
+export function validState(s,origin) {
+ if(!validSite(s?.site,origin))return false;
  if(!s || typeof s.heading!=='string' || typeof s.intro!=='string' || !s.book || !s.media || !Array.isArray(s.pairs) || s.pairs.length>50) return false;
  const strings=(o,keys)=>keys.every(k=>typeof o?.[k]==='string' && o[k].length<=50000);
  const media=(v)=>!v || (typeof v==='string' && new RegExp('^'+origin.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'/media/[a-f0-9-]{36}$').test(v));
@@ -43,6 +45,10 @@ export async function handle(request,env) {
   if(Number(request.headers.get('content-length'))>600000)return json({error:'Projekt zu groß'},413);
   const raw=await request.text();if(raw.length>600000)return json({error:'Projekt zu groß'},413);
   let data;try{data=JSON.parse(raw);}catch{return json({error:'Ungültige Daten'},400);}
+  // Preserve new site management data when an older open client saves legacy fields.
+  if(data?.state && typeof data.state==='object' && !Array.isArray(data.state) && data.state.site===undefined){
+   const existing=await env.DB.prepare('SELECT state FROM project WHERE id=1').first();if(existing?.state){const previous=JSON.parse(existing.state);if(previous.site)data.state.site=previous.site;}
+  }
   if(!Number.isSafeInteger(data.revision)||!validState(data.state,url.origin))return json({error:'Ungültige Projektdaten oder Medienadressen'},400);
   const state=JSON.stringify(data.state), now=new Date().toISOString();
   // Snapshot and compare-and-swap update are one transaction. A stale revision changes nothing.

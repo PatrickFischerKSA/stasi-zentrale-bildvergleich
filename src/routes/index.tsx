@@ -1,3 +1,4 @@
+import {SiteManager,HomeSections,HomeSection} from '@/components/site-manager';
 import { useMemo, useState } from "react";
 import { Plus, Printer, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
@@ -69,8 +70,9 @@ export default function Index() {
         {conflict && <div role="alert" className="panel my-3"><p>Jemand hat dieselben Felder geändert. Deine Eingaben bleiben erhalten. Wähle die gemeinsame Version oder übernimm deine betroffenen Felder.</p><p className="my-2 text-sm">{conflict.paths.length} Konflikt(e): {conflict.paths.map(p=>p.split('/').pop()).join(', ')}</p><div className="flex flex-wrap gap-3"><Button onClick={()=>resolve('remote')}>Gemeinsame Version laden</Button><Button onClick={()=>resolve('local')}>Meine betroffenen Felder übernehmen</Button></div></div>}
         {history.length>0 && <div className="panel my-3"><p className="mb-3">Frühere Versionen wiederherstellen</p>{history.map(v=><Button key={v.revision} className="m-1" onClick={()=>void restore(v.revision)}>Version {v.revision} · {new Date(v.updated_at).toLocaleString('de-CH')}</Button>)}<Button onClick={()=>setHistory([])}>Schliessen</Button></div>}
       </div>
+      <SiteManager value={state.site} onChange={change=>setState(s=>({...s,site:change(s.site)}))} canEdit={canEdit} blocked={!!conflict||importBusy} status={status}>
       <EditingContext.Provider value={canEdit && !conflict && !importBusy}><div>
-      <header className="mx-auto max-w-6xl px-5 pt-14 pb-10 md:px-8 md:pt-20">
+      <HomeSections><HomeSection id="intro" label="Titel und Einleitung"><header className="mx-auto max-w-6xl px-5 pt-14 pb-10 md:px-8 md:pt-20">
         <div className="flex flex-wrap items-center gap-3">
           <span className="stamp text-primary">MfS · Berlin-Lichtenberg</span>
           <span className="file-label text-muted-foreground">Normannenstraße 22 / Ruschestraße 103</span>
@@ -102,11 +104,12 @@ export default function Index() {
             </div>
           </div>
         </div>
-      </header>
+      </header></HomeSection>
 
-      <main className="mx-auto flex max-w-6xl flex-col gap-10 px-5 pb-16 md:px-8">
-        <BookSection book={sections.book} onChange={(book) => update({ book })} />
-        <MediaSection media={sections.media} onChange={(media) => update({ media })} />
+
+        <HomeSection id="book" label="Buch"><div className="mx-auto max-w-6xl px-5 py-6"><BookSection book={sections.book} onChange={(book) => update({ book })} /></div></HomeSection>
+        <HomeSection id="media" label="Bilder und Video"><div className="mx-auto max-w-6xl px-5 py-6"><MediaSection media={sections.media} onChange={(media) => update({ media })} /></div></HomeSection>
+        <HomeSection id="comparisons" label="Bildvergleiche"><main className="mx-auto flex max-w-6xl flex-col gap-10 px-5 pb-16 md:px-8">
 
         <div className="flex items-center gap-4 pt-4">
           <span className="stamp text-primary">Damals · Heute</span>
@@ -138,9 +141,10 @@ export default function Index() {
           <Plus className="size-5 transition-transform group-hover:rotate-90" />
           <span className="file-label">Weiteren Vergleich hinzufügen</span>
         </button>
-      </main>
+      </main></HomeSection></HomeSections>
 
       </div></EditingContext.Provider>
+      </SiteManager>
       <footer className="border-t border-dashed">
         <div className="mx-auto flex max-w-6xl flex-wrap justify-between gap-2 px-5 py-6 md:px-8">
           <p className="file-label text-muted-foreground">Bildvergleich · Stasi-Zentrale</p>

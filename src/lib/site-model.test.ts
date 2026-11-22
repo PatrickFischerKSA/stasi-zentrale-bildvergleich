@@ -1,0 +1,11 @@
+import {describe,it,expect} from 'vitest';
+import {defaultSite,normalizeSite,moveItem,newBlock,pageHref,sorted} from './site-model';
+import {mergeChanges} from './merge';
+describe('Seitenverwaltung und Migration',()=>{
+ it('ergänzt alte Projektstände ohne vorhandene Seiten zu verlieren',()=>{expect(normalizeSite(undefined)).toEqual(defaultSite());const s=defaultSite();s.pages.push({id:'a',title:'Fotos',blocks:[newBlock('text',0)],order:1});expect(normalizeSite(s)).toEqual(s);});
+ it('sortiert stabil und verändert nur explizite Rangfelder',()=>{const list=[{id:'a',order:0},{id:'b',order:1},{id:'c',order:2}];expect(sorted(moveItem(list,'c',-1)).map(x=>x.id)).toEqual(['a','c','b']);expect(list.map(x=>x.id)).toEqual(['a','b','c']);expect(moveItem(list,'a',-1)).toBe(list);});
+ it('behält Seitenlinks und Bearbeitungsfragment bei Navigation bei',()=>{expect(pageHref('uuid','https://example.org/project/#edit=secret')).toBe('/project/?page=uuid#edit=secret');expect(pageHref('home','https://example.org/project/?page=uuid#edit=secret')).toBe('/project/#edit=secret');});
+ it('führt parallel neu angelegte Seiten und Menüeinträge zusammen',()=>{const base=defaultSite(),a=structuredClone(base),b=structuredClone(base);a.pages.push({id:'a',title:'A',blocks:[],order:1});b.pages.push({id:'b',title:'B',blocks:[],order:1});a.navigation.push({id:'na',kind:'page',target:'a',label:'',visible:true,order:1});b.navigation.push({id:'nb',kind:'page',target:'b',label:'',visible:true,order:1});const m=mergeChanges(base,a,b);expect(m.conflicts).toEqual([]);expect(m.value.pages).toHaveLength(3);expect(m.value.navigation).toHaveLength(3);});
+ it('erhält beim Sortieren gleichzeitige Textänderungen',()=>{const base=defaultSite();base.pages.push({id:'a',title:'Alt',blocks:[],order:1});const a={...base,pages:moveItem(base.pages,'a',-1)},b=structuredClone(base);b.pages[1].title='Neu';const m=mergeChanges(base,a,b);expect(m.conflicts).toEqual([]);expect(sorted(m.value.pages)[0].title).toBe('Neu');});
+ it('meldet widersprüchliche Seitenänderungen',()=>{const base=defaultSite(),a=structuredClone(base),b=structuredClone(base);a.pages[0].title='A';b.pages[0].title='B';expect(mergeChanges(base,a,b).conflicts).toContain('/pages/home/title');});
+});
