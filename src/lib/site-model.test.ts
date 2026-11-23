@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {defaultSite,normalizeSite,moveItem,newBlock,pageHref,sorted} from './site-model';
+import {nextOrder,defaultSite,normalizeSite,moveItem,newBlock,pageHref,sorted} from './site-model';
 import {mergeChanges} from './merge';
 describe('Seitenverwaltung und Migration',()=>{
  it('ergänzt alte Projektstände ohne vorhandene Seiten zu verlieren',()=>{expect(normalizeSite(undefined)).toEqual(defaultSite());const s=defaultSite();s.pages.push({id:'a',title:'Fotos',blocks:[newBlock('text',0)],order:1});expect(normalizeSite(s)).toEqual(s);});
@@ -9,3 +9,5 @@ describe('Seitenverwaltung und Migration',()=>{
  it('erhält beim Sortieren gleichzeitige Textänderungen',()=>{const base=defaultSite();base.pages.push({id:'a',title:'Alt',blocks:[],order:1});const a={...base,pages:moveItem(base.pages,'a',-1)},b=structuredClone(base);b.pages[1].title='Neu';const m=mergeChanges(base,a,b);expect(m.conflicts).toEqual([]);expect(sorted(m.value.pages)[0].title).toBe('Neu');});
  it('meldet widersprüchliche Seitenänderungen',()=>{const base=defaultSite(),a=structuredClone(base),b=structuredClone(base);a.pages[0].title='A';b.pages[0].title='B';expect(mergeChanges(base,a,b).conflicts).toContain('/pages/home/title');});
 });
+
+it('vergibt nach Löschungen und doppelten Rängen eine Position hinter dem letzten Element',()=>{expect(nextOrder([{order:0},{order:2}])).toBe(3);expect(nextOrder([{order:1},{order:1}])).toBe(2);expect(nextOrder([])).toBe(0);});

@@ -6,3 +6,8 @@
 
 textarea.field { field-sizing: content; overflow-wrap: anywhere; }
 @media(max-width:640px) { header textarea[aria-label="Überschrift"] { font-size:2.5rem; } }
+
+/* Keep uploaded media and long captions inside narrow grid columns. */
+.panel,.panel > div,.panel figure { min-width:0; max-width:100%; }
+.panel img,.panel video { display:block; max-width:100%; }
+.panel figcaption { overflow-wrap:anywhere; white-space:pre-wrap; }

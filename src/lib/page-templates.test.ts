@@ -1,0 +1,9 @@
+import {it,expect} from 'vitest';
+import {pageTemplates,templateBlocks,appendTemplate,duplicatePage} from './page-templates';
+import {defaultSite,normalizeSite} from './site-model';
+it('erzeugt alle Vorlagen mit eindeutigen Bausteinen und passenden Layouts',()=>{for(const t of pageTemplates){const a=templateBlocks(t.id),b=templateBlocks(t.id);expect(a.map(x=>x.kind)).toEqual([...t.kinds]);expect(new Set([...a,...b].map(x=>x.id)).size).toBe(a.length+b.length);}});
+it('ergänzt eine Vorlage ohne bestehende Texte und Bilder zu überschreiben',()=>{const p=defaultSite().pages[0];p.blocks=[{id:'kept',kind:'text',text:'Unbedingt erhalten',url:'',alt:'',caption:'',order:4}];const next=appendTemplate(p,'poster');expect(next.blocks[0]).toEqual(p.blocks[0]);expect(next.blocks[1].order).toBe(5);expect(next.layout).toBe('poster');});
+it('dupliziert Seiten mit frischen IDs und unverändertem Inhalt',()=>{const p=appendTemplate(defaultSite().pages[0],'gallery');p.blocks[0].url='https://own.example/media/uuid';const copy=duplicatePage(p,8);expect(copy.id).not.toBe(p.id);expect(copy.blocks[0].id).not.toBe(p.blocks[0].id);expect(copy.blocks[0].url).toBe(p.blocks[0].url);expect(copy.order).toBe(8);expect(copy.layout).toBe('gallery');});
+it('erhält Layout und Startseiteneinbindung beim Laden',()=>{const s=defaultSite();s.homePlacement='replace';s.pages[0].layout='poster';expect(normalizeSite(s)).toEqual(s);});
+
+it('erhält Captions und Bildformat beim Laden und Duplizieren',()=>{const s=defaultSite();s.pages[0]=appendTemplate(s.pages[0],'poster');const image=s.pages[0].blocks[0];image.caption='Eine sichtbare Caption\nMit Quelle';image.imageWidth='compact';image.imageAspect='4:3';image.imageFit='contain';const loaded=normalizeSite(s);expect(loaded.pages[0].blocks[0]).toEqual(image);const copy=duplicatePage(loaded.pages[0],1);expect(copy.blocks[0].caption).toBe(image.caption);expect(copy.blocks[0].imageWidth).toBe('compact');});

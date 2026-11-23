@@ -1,4 +1,4 @@
-import {validSite} from './site-schema.mjs';
+import {validSite,preserveSiteSettings} from './site-schema.mjs';
 const ORIGINS = new Set(['https://patrickfischerksa.github.io','http://127.0.0.1:5178','http://127.0.0.1:5173','http://localhost:5173']);
 const TYPES = new Set(['image/jpeg','image/png','image/webp','image/gif','image/avif','video/mp4','video/webm','video/quicktime','video/ogg']);
 function json(body, status=200) {return Response.json(body,{status,headers:{'Cache-Control':'no-store'}});}
@@ -46,8 +46,8 @@ export async function handle(request,env) {
   const raw=await request.text();if(raw.length>600000)return json({error:'Projekt zu groß'},413);
   let data;try{data=JSON.parse(raw);}catch{return json({error:'Ungültige Daten'},400);}
   // Preserve new site management data when an older open client saves legacy fields.
-  if(data?.state && typeof data.state==='object' && !Array.isArray(data.state) && data.state.site===undefined){
-   const existing=await env.DB.prepare('SELECT state FROM project WHERE id=1').first();if(existing?.state){const previous=JSON.parse(existing.state);if(previous.site)data.state.site=previous.site;}
+  if(data?.state && typeof data.state==='object' && !Array.isArray(data.state)){
+   const existing=await env.DB.prepare('SELECT state FROM project WHERE id=1').first();if(existing?.state){const previous=JSON.parse(existing.state);if(previous.site)data.state.site=data.state.site===undefined?previous.site:preserveSiteSettings(data.state.site,previous.site);}
   }
   if(!Number.isSafeInteger(data.revision)||!validState(data.state,url.origin))return json({error:'Ungültige Projektdaten oder Medienadressen'},400);
   const state=JSON.stringify(data.state), now=new Date().toISOString();
