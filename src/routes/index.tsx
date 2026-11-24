@@ -1,7 +1,10 @@
-import type { ReactNode } from "react";
-
-const LOVABLE_EDIT_URL =
-  "https://lovable.dev/projects/7023de20-609e-4a6e-a4b5-cacfa6d7576d";
+import { useState, type ReactNode } from "react";
+import { toast } from "sonner";
+import { SiteManager } from "@/components/site-manager";
+import { Button } from "@/components/ui/button";
+import { normalizeState } from "@/lib/comparison-store";
+import { api, editToken } from "@/lib/online";
+import { useSharedProject } from "@/lib/use-shared-project";
 
 function PH({ kind, children, tall }: { kind: string; children: ReactNode; tall?: boolean }) {
   return (
@@ -51,18 +54,9 @@ function Chapter({ n, title }: { n: string; title: string }) {
   );
 }
 
-export default function Index() {
-  const isEditLink = typeof window !== "undefined" && window.location.hash.startsWith("#edit=");
-
+function TemplateContent() {
   return (
     <main className="bg-background text-foreground">
-      {isEditLink && (
-        <aside className="edit-access-bar" aria-label="Bearbeitungszugang">
-          <span>Bearbeitungsmodus · aktueller Lovable-Stand</span>
-          <a href={LOVABLE_EDIT_URL} target="_blank" rel="noreferrer">In Lovable bearbeiten</a>
-        </aside>
-      )}
-
       <div className="bg-accent px-4 py-2 text-center text-xs font-medium text-accent-foreground">
         Entwurf · Alle orange gestrichelten Felder und [Platzhalter] sind noch zu ersetzen und zu belegen.
       </div>
@@ -161,5 +155,98 @@ export default function Index() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function Index() {
+  const { state, setState, loaded, canEdit, status, error, conflict, resolve, sync } = useSharedProject();
+  const [history, setHistory] = useState<{ revision: number; updated_at: string }[]>([]);
+
+  const copyLink = async (edit = false) => {
+    const url = new URL(location.href);
+    url.search = "";
+    url.hash = edit ? `edit=${editToken()}` : "";
+    try {
+      await navigator.clipboard.writeText(url.href);
+      toast(edit ? "Bearbeitungslink kopiert" : "Ansichtslink kopiert");
+    } catch {
+      window.prompt("Link kopieren:", url.href);
+    }
+  };
+
+  const versions = async () => {
+    try {
+      const versions = (await (await api("/api/history")).json()).versions;
+      setHistory(versions);
+      if (!versions.length) toast("Noch keine früheren Versionen vorhanden.");
+    } catch (caught) {
+      toast.error((caught as Error).message);
+    }
+  };
+
+  const restore = async (revision: number) => {
+    if (!window.confirm("Diese ältere Version für alle wiederherstellen?")) return;
+    try {
+      const data = await (await api(`/api/history/${revision}`)).json();
+      setState(normalizeState(data.state));
+      setHistory([]);
+    } catch (caught) {
+      toast.error((caught as Error).message);
+    }
+  };
+
+  if (!loaded) {
+    return (
+      <main className="mx-auto max-w-3xl p-8">
+        <p role="status">{error || "Gemeinsame Vorlage wird geladen …"}</p>
+        <Button onClick={() => void sync()}>Erneut versuchen</Button>
+      </main>
+    );
+  }
+
+  return (
+    <div className="min-h-screen">
+      <aside className="edit-access-bar print:hidden" aria-label="Projektzugang">
+        <span>{canEdit ? "Template bearbeiten · automatisch online gespeichert" : "Kälter-Template · Leseansicht"}</span>
+        <div className="edit-access-actions">
+          <button type="button" onClick={() => void copyLink()}>Ansichtslink kopieren</button>
+          {canEdit && <button type="button" onClick={() => void copyLink(true)}>Bearbeitungslink kopieren</button>}
+          {canEdit && <button type="button" onClick={() => void versions()}>Versionsverlauf</button>}
+        </div>
+      </aside>
+
+      <div className="mx-auto max-w-5xl px-5 py-3 print:hidden">
+        <p role="status" className="text-sm">{status}</p>
+        {error && <p role="alert" className="mt-2 text-accent">{error} <Button onClick={() => void sync()}>Erneut versuchen</Button></p>}
+        {conflict && (
+          <div role="alert" className="template-notice">
+            <p>Jemand hat gleichzeitig dieselben Felder geändert. Wähle, welche Fassung übernommen wird.</p>
+            <div className="edit-access-actions">
+              <Button onClick={() => resolve("remote")}>Gemeinsame Version laden</Button>
+              <Button onClick={() => resolve("local")}>Meine Änderungen übernehmen</Button>
+            </div>
+          </div>
+        )}
+        {history.length > 0 && (
+          <div className="template-notice">
+            <p>Frühere Version wiederherstellen</p>
+            <div className="edit-access-actions">
+              {history.map((version) => <Button key={version.revision} onClick={() => void restore(version.revision)}>Version {version.revision} · {new Date(version.updated_at).toLocaleString("de-CH")}</Button>)}
+              <Button onClick={() => setHistory([])}>Schliessen</Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <SiteManager
+        value={state.site}
+        onChange={(change) => setState((current) => ({ ...current, site: change(current.site) }))}
+        canEdit={canEdit}
+        blocked={!!conflict}
+        status={status}
+      >
+        <TemplateContent />
+      </SiteManager>
+    </div>
   );
 }
