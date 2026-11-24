@@ -1,156 +1,165 @@
-import {SiteManager,HomeSections,HomeSection} from '@/components/site-manager';
-import { useMemo, useState } from "react";
-import { Plus, Printer, RotateCcw } from "lucide-react";
-import { toast } from "sonner";
-import { useSharedProject } from '@/lib/use-shared-project';
-import { EditingContext } from '@/lib/editing';
-import { api,editToken,importLocalMedia } from '@/lib/online';
-import { Button } from "@/components/ui/button";
-import { ComparisonCard } from "@/components/comparison/ComparisonCard";
-import { BookSection } from "@/components/sections/BookSection";
-import { MediaSection } from "@/components/sections/MediaSection";
-import {
-  createDefaultState,
-  createPair,
-  normalizeState,
-  loadState,
-  type TemplateState,
-} from "@/lib/comparison-store";
+import type { ReactNode } from "react";
+
+const LOVABLE_EDIT_URL =
+  "https://lovable.dev/projects/7023de20-609e-4a6e-a4b5-cacfa6d7576d";
+
+function PH({ kind, children, tall }: { kind: string; children: ReactNode; tall?: boolean }) {
+  return (
+    <figure className={`placeholder-box my-8 flex flex-col justify-center rounded-sm px-5 py-6 ${tall ? "min-h-[55vh]" : "min-h-40"}`}>
+      <span className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Platzhalter · {kind}</span>
+      <figcaption className="mt-2 text-sm leading-relaxed text-muted-foreground">{children}</figcaption>
+    </figure>
+  );
+}
+
+function TextPH({ children }: { children: ReactNode }) {
+  return <span className="rounded-sm bg-accent/10 px-1 text-accent">[Platzhalter: {children}]</span>;
+}
+
+function Station({
+  kicker,
+  title,
+  children,
+  dark,
+}: {
+  kicker: string;
+  title: string;
+  children: ReactNode;
+  dark?: boolean;
+}) {
+  return (
+    <section className={`${dark ? "bg-primary text-primary-foreground" : ""} flex min-h-[90vh] flex-col justify-center px-6 py-20`}>
+      <div className="reveal mx-auto w-full max-w-md">
+        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-accent">{kicker}</p>
+        <h2 className="text-balance text-4xl font-semibold leading-[1.05]">{title}</h2>
+        <div className={`mt-6 space-y-4 text-[1.05rem] leading-relaxed ${dark ? "text-primary-foreground/85" : "text-foreground/85"}`}>
+          {children}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Chapter({ n, title }: { n: string; title: string }) {
+  return (
+    <div className="border-y border-border px-6 py-10">
+      <div className="mx-auto flex max-w-md items-baseline gap-4">
+        <span className="font-serif text-6xl text-accent">{n}</span>
+        <span className="font-serif text-2xl italic">{title}</span>
+      </div>
+    </div>
+  );
+}
 
 export default function Index() {
-  const {state,setState,loaded,canEdit,status,error,conflict,resolve,sync} = useSharedProject();
-  const [importBusy,setImportBusy]=useState(false);
-  const [history,setHistory] = useState<{revision:number;updated_at:string}[]>([]);
-  const copyLink = async (edit=false) => {
-    const url=new URL(location.href); url.hash=edit?'edit='+editToken():'';
-    try { await navigator.clipboard.writeText(url.href); toast(edit?'Bearbeitungslink kopiert':'Ansichtslink kopiert'); } catch { window.prompt('Link kopieren:',url.href); }
-  };
-  const importLocal = async () => {
-    if(!window.confirm('Die bisherige lokale Vorlage mit ihren Bildern und Texten in das gemeinsame Projekt übernehmen? Diese Inhalte werden für alle sichtbar.'))return;
-    setImportBusy(true);
-    try {const stored=await loadState();if(!stored){toast('Keine bisherige lokale Vorlage in diesem Browser vorhanden.');return;}setState(await importLocalMedia(stored));toast('Lokale Inhalte übernommen. Sie werden online gespeichert.');}catch(e){toast.error((e as Error).message);}finally{setImportBusy(false);}
-  };
-  const versions = async () => { try {const versions=(await (await api('/api/history')).json()).versions;setHistory(versions);if(!versions.length)toast("Noch keine früheren Versionen vorhanden.");}catch(e){toast.error((e as Error).message);} };
-  const restore = async (revision:number) => {
-    if(!window.confirm('Diese ältere Version für alle wiederherstellen?'))return;
-    try {const data=await (await api('/api/history/'+revision)).json();setState(normalizeState(data.state));setHistory([]);}catch(e){toast.error((e as Error).message);}
-  };
-  // Guards against state that lacks newer sections (e.g. kept in memory from an older version).
-  const sections = useMemo(() => normalizeState(state), [state]);
-
-  const update = (patch: Partial<TemplateState>) => setState((s) => ({ ...s, ...patch }));
-
-  const reset = async () => {
-    if (!window.confirm("Die gemeinsame Vorlage für ALLE zurücksetzen? Frühere Versionen bleiben im Verlauf erhalten.")) return;
-    setState(createDefaultState());
-    toast("Gemeinsame Vorlage wird zurückgesetzt");
-  };
-
-  if (!loaded) return <main className="mx-auto max-w-6xl p-8"><p role="status">{error || "Gemeinsame Version wird geladen …"}</p><Button onClick={()=>void sync()}>Erneut versuchen</Button></main>;
+  const isEditLink = typeof window !== "undefined" && window.location.hash.startsWith("#edit=");
 
   return (
-    <div className="min-h-screen">
-      <div className="bg-ink text-ink-foreground print:hidden">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-2.5 md:px-8">
-          <p className="file-label opacity-80">{canEdit ? "Gemeinsam bearbeiten · Änderungen werden online gespeichert" : "Gemeinsame Online-Version · Leseansicht"}</p>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="ink" size="sm" onClick={()=>void copyLink()}>Ansichtslink kopieren</Button>
-            {canEdit && <><Button variant="ink" size="sm" onClick={()=>void copyLink(true)}>Bearbeitungslink kopieren</Button><Button variant="ink" size="sm" onClick={()=>void versions()}>Versionsverlauf</Button><Button variant="ink" size="sm" disabled={importBusy || !!conflict} onClick={()=>void importLocal()}>{importBusy?"Medien werden übertragen …":"Bisherige lokale Vorlage übernehmen"}</Button></>}
-            <Button variant="ink" size="sm" onClick={() => window.print()} className="border border-ink-foreground/30">
-              <Printer /> Drucken / PDF
-            </Button>
-            <Button disabled={!canEdit || !!conflict || importBusy} variant="ink" size="sm" onClick={reset} className="border border-ink-foreground/30">
-              <RotateCcw /> Zurücksetzen
-            </Button>
-          </div>
-        </div>
+    <main className="bg-background text-foreground">
+      {isEditLink && (
+        <aside className="edit-access-bar" aria-label="Bearbeitungszugang">
+          <span>Bearbeitungsmodus · aktueller Lovable-Stand</span>
+          <a href={LOVABLE_EDIT_URL} target="_blank" rel="noreferrer">In Lovable bearbeiten</a>
+        </aside>
+      )}
+
+      <div className="bg-accent px-4 py-2 text-center text-xs font-medium text-accent-foreground">
+        Entwurf · Alle orange gestrichelten Felder und [Platzhalter] sind noch zu ersetzen und zu belegen.
       </div>
 
-      <div className="mx-auto max-w-6xl px-5 py-4 print:hidden"><p role="status" className="text-sm">{status}</p>{error && <p role="alert" className="mt-2 text-primary">{error} <Button onClick={()=>void sync()}>Erneut versuchen</Button></p>}
-        {conflict && <div role="alert" className="panel my-3"><p>Jemand hat dieselben Felder geändert. Deine Eingaben bleiben erhalten. Wähle die gemeinsame Version oder übernimm deine betroffenen Felder.</p><p className="my-2 text-sm">{conflict.paths.length} Konflikt(e): {conflict.paths.map(p=>p.split('/').pop()).join(', ')}</p><div className="flex flex-wrap gap-3"><Button onClick={()=>resolve('remote')}>Gemeinsame Version laden</Button><Button onClick={()=>resolve('local')}>Meine betroffenen Felder übernehmen</Button></div></div>}
-        {history.length>0 && <div className="panel my-3"><p className="mb-3">Frühere Versionen wiederherstellen</p>{history.map(v=><Button key={v.revision} className="m-1" onClick={()=>void restore(v.revision)}>Version {v.revision} · {new Date(v.updated_at).toLocaleString('de-CH')}</Button>)}<Button onClick={()=>setHistory([])}>Schliessen</Button></div>}
-      </div>
-      <SiteManager value={state.site} onChange={change=>setState(s=>({...s,site:change(s.site)}))} canEdit={canEdit} blocked={!!conflict||importBusy} status={status}>
-      <EditingContext.Provider value={canEdit && !conflict && !importBusy}><div>
-      <HomeSections><HomeSection id="intro" label="Titel und Einleitung"><header className="mx-auto max-w-6xl px-5 pt-14 pb-10 md:px-8 md:pt-20">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="stamp text-primary">MfS · Berlin-Lichtenberg</span>
-          <span className="file-label text-muted-foreground">Normannenstraße 22 / Ruschestraße 103</span>
+      <header className="flex min-h-screen flex-col justify-end px-6 pb-16 pt-24">
+        <div className="mx-auto w-full max-w-md">
+          <PH kind="Eigenes Foto oder Kurzvideo (Hochformat)" tall>
+            Ein Gegenwartsmoment, z. B. eine aktuelle Nachricht, ein Ort in Berlin heute, ein Smartphone mit Push-Meldung. Bildnachweis:{" "}
+            <TextPH>eigene Aufnahme, Datum, Ort</TextPH>
+            <span className="mt-3 block rounded-sm bg-accent/10 p-3 font-mono text-xs leading-relaxed text-foreground/80">
+              {'<video src="/gegenwart.mp4" controls playsInline className="my-8 aspect-[9/16] w-full rounded-sm object-cover" />'}
+              <br />
+              <span className="text-muted-foreground">→ Fertiges Template steht direkt über diesem Platzhalter im Code: Marker entfernen, Datei in „public“ legen, fertig.</span>
+            </span>
+          </PH>
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Eine Scrollstory zu Andreas Pflüger</p>
+          <h1 className="mt-3 text-7xl font-semibold leading-none">Kälter</h1>
+          <p className="mt-6 font-serif text-xl italic leading-snug">
+            <TextPH>Ein Satz, der den Gegenwartsmoment benennt und zur Frage des Romans überleitet</TextPH>
+          </p>
+          <p className="mt-10 text-sm text-muted-foreground">Scrollen ↓</p>
         </div>
-        <textarea readOnly={!canEdit || !!conflict || importBusy}
-          className="field mt-6 resize-none overflow-hidden font-display text-5xl leading-[0.95] tracking-tight md:text-7xl"
-          rows={2}
-          value={state.heading}
-          onChange={(e) => update({ heading: e.target.value })}
-          aria-label="Überschrift"
-        />
-        <div className="mt-6 grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
-          <textarea readOnly={!canEdit || !!conflict || importBusy}
-            className="field max-w-2xl resize-none text-lg leading-relaxed text-muted-foreground"
-            rows={2}
-            value={state.intro}
-            onChange={(e) => update({ intro: e.target.value })}
-            aria-label="Einleitung"
-          />
-          <div className="flex items-end gap-6 font-display leading-none">
-            <div>
-              <p className="file-label mb-1 text-muted-foreground">Damals</p>
-              <p className="text-6xl text-era-past">1989</p>
-            </div>
-            <span className="pb-2 text-3xl text-muted-foreground">↔</span>
-            <div>
-              <p className="file-label mb-1 text-muted-foreground">Heute</p>
-              <p className="text-6xl text-era-now">{new Date().getFullYear()}</p>
-            </div>
-          </div>
+      </header>
+
+      <PH kind="Atmo-Ton">
+        <span className="block">Audio-Datei, ca. 20–40 Sek., z. B. Straßengeräusch, Funkrauschen. Quelle: <TextPH>eigene Aufnahme / Archiv mit Lizenz</TextPH></span>
+      </PH>
+
+      <Chapter n="1" title="Der Fall" />
+      <Station kicker="Ausgangslage" title="Mauerfall 9.11.1989">
+        <p>Die Pressekonferenz wird im Buch erwähnt nachdem Luzy von einem Kurztrip im Süden Frankreichs zurückkommt. Schabowskis genaue Worte werden zitiert: „Das tritt nach meiner Kenntnis – ist das sofort – unverzüglich.“ Luzy erkennt die Tragweite dieser Worte sofort und macht sich auf den Weg zum Grenzübergang, nach Ostberlin, zur Stasizentrale.</p>
+      </Station>
+      <Station kicker="Figur" title="Luzy Morgenrot">
+        <p><TextPH>Hauptfigur(en) und Motiv, nur nach eigener Lektüre beschreiben</TextPH></p>
+        <PH kind="Eigenes Foto">Symbolbild zur Figur. Bildnachweis: <TextPH>Urheber:in</TextPH></PH>
+      </Station>
+      <Station kicker="Zitat" title="Ein Satz, der hängen bleibt.">
+        <blockquote className="border-l-2 border-accent pl-4 font-serif text-2xl italic"><TextPH>wörtliches Zitat aus dem Roman</TextPH></blockquote>
+        <p className="text-sm text-muted-foreground">Pflüger, Kälter, S. <TextPH>Seite</TextPH></p>
+      </Station>
+
+      <Chapter n="2" title="Der historische Kontext" />
+      <Station kicker="Mauerfall" title="Am 9. November 1989 öffnet sich die Grenze.">
+        <p>Mit der Öffnung der Berliner Mauer beginnt das Ende der DDR. Für die Geheimdienste in Ost und West bedeutet das: Akten, Netzwerke und Geheimnisse geraten in Bewegung.</p>
+        <PH kind="Historische Quelle">Foto oder Dokument zum 9. November 1989. Beschriftung: <TextPH>Titel, Urheber, Datum, Archiv, Signatur, Lizenz</TextPH></PH>
+      </Station>
+      <Station dark kicker="RAF in der DDR" title="Untergetaucht im anderen Deutschland.">
+        <p>Mehrere ehemalige Mitglieder der RAF lebten in den 1980er Jahren mit neuen Identitäten in der DDR – unterstützt von der Staatssicherheit. Nach dem Mauerfall wurden sie 1990 enttarnt und festgenommen.</p>
+        <p className="text-sm opacity-70">Details (Namen, Zahl, Daten) vor Veröffentlichung mit Quellen belegen, z. B. Stasi-Unterlagen-Archiv, bpb.</p>
+      </Station>
+      <Station kicker="Karte" title="Ein geteiltes Land, ein Netz aus Orten.">
+        <PH kind="Karte" tall>Karte mit den Schauplätzen des Romans und historischen Orten. Kartengrundlage: <TextPH>z. B. OpenStreetMap, © OpenStreetMap-Mitwirkende, ODbL</TextPH></PH>
+      </Station>
+      <Station kicker="Geheimdienste" title="Wer weiß was – und wer verrät wen?">
+        <p><TextPH>Rolle von MfS (Stasi) und westlichen Diensten im Roman, belegt</TextPH></p>
+        <PH kind="Historische Quelle">Aktenauszug. Beschriftung: <TextPH>Dokumenttitel, Datum, Archiv, Signatur</TextPH></PH>
+      </Station>
+
+      <Chapter n="3" title="Das zentrale Thema" />
+      <Station kicker="These" title="[Platzhalter: Thema in einem Wort]">
+        <p><TextPH>Eine These: Was der Roman über dieses Thema sagt</TextPH></p>
+      </Station>
+      <Station kicker="Beleg" title="Wo der Text es zeigt.">
+        <p><TextPH>Szene aus dem Roman, mit Seitenangabe</TextPH></p>
+        <PH kind="Kurzvideo">10–20 Sek. eigene Aufnahme zur Stimmung. Nachweis: <TextPH>eigene Aufnahme</TextPH></PH>
+      </Station>
+
+      <Chapter n="4" title="Mein Aspekt" />
+      <Station kicker="Selbst gewählt" title="[Platzhalter: eigener Aspekt]">
+        <p><TextPH>Warum dieser Aspekt? Eine Beobachtung, ein Gedanke</TextPH></p>
+      </Station>
+
+      <Chapter n="5" title="Und heute?" />
+      <Station dark kicker="Gegenwart" title="Was bleibt kalt?">
+        <p><TextPH>Rückbezug auf den Gegenwartsmoment vom Anfang – ein klarer Schlussgedanke</TextPH></p>
+        <PH kind="Eigenes Foto">Derselbe Ort / dasselbe Motiv wie am Anfang. Bildnachweis: <TextPH>eigene Aufnahme</TextPH></PH>
+      </Station>
+
+      <section className="px-6 py-20">
+        <div className="mx-auto max-w-md">
+          <h2 className="text-4xl font-semibold">Quellen</h2>
+          <h3 className="mt-8 text-xl">Primärliteratur</h3>
+          <ul className="mt-2 space-y-2 text-sm"><li>Pflüger, Andreas: Kälter. <TextPH>Verlag, Ort, Jahr, Auflage</TextPH></li></ul>
+          <h3 className="mt-8 text-xl">Sekundärliteratur &amp; Rezensionen</h3>
+          <ul className="mt-2 space-y-2 text-sm"><li><TextPH>Autor:in, Titel, Medium, Datum, URL, abgerufen am</TextPH></li></ul>
+          <h3 className="mt-8 text-xl">Historische Quellen</h3>
+          <ul className="mt-2 space-y-2 text-sm">
+            <li><TextPH>Dokument, Datum, Archiv, Signatur</TextPH></li>
+            <li><TextPH>Darstellung zu RAF in der DDR, z. B. Stasi-Unterlagen-Archiv / bpb, URL</TextPH></li>
+          </ul>
+          <h3 className="mt-8 text-xl">Bild-, Video- und Tonnachweise</h3>
+          <ul className="mt-2 space-y-2 text-sm"><li><TextPH>je Medium: Titel, Urheber:in, Lizenz, Quelle</TextPH></li></ul>
+          <h3 className="mt-8 text-xl">Karte</h3>
+          <ul className="mt-2 space-y-2 text-sm"><li><TextPH>Kartengrundlage und Lizenz</TextPH></li></ul>
+          <p className="mt-12 border-t border-border pt-6 text-xs text-muted-foreground">Erstellt von <TextPH>Name, Klasse, Datum</TextPH></p>
         </div>
-      </header></HomeSection>
-
-
-        <HomeSection id="book" label="Buch"><div className="mx-auto max-w-6xl px-5 py-6"><BookSection book={sections.book} onChange={(book) => update({ book })} /></div></HomeSection>
-        <HomeSection id="media" label="Bilder und Video"><div className="mx-auto max-w-6xl px-5 py-6"><MediaSection media={sections.media} onChange={(media) => update({ media })} /></div></HomeSection>
-        <HomeSection id="comparisons" label="Bildvergleiche"><main className="mx-auto flex max-w-6xl flex-col gap-10 px-5 pb-16 md:px-8">
-
-        <div className="flex items-center gap-4 pt-4">
-          <span className="stamp text-primary">Damals · Heute</span>
-          <span className="h-px flex-1 border-t border-dashed border-input" />
-        </div>
-
-        {state.pairs.map((pair, i) => (
-          <ComparisonCard
-            key={pair.id}
-            pair={pair}
-            index={i}
-            onChange={(next) =>
-              setState((s) => ({ ...s, pairs: s.pairs.map((p) => (p.id === next.id ? next : p)) }))
-            }
-            onRemove={() => {
-              if (!window.confirm(`„${pair.title}“ löschen?`)) return;
-              setState((s) => ({ ...s, pairs: s.pairs.filter((p) => p.id !== pair.id) }));
-            }}
-          />
-        ))}
-
-        <button
-          type="button"
-          disabled={!canEdit || !!conflict || importBusy}
-          hidden={!canEdit}
-          onClick={() => setState((s) => ({ ...s, pairs: [...s.pairs, createPair()] }))}
-          className="empty-slot group flex items-center justify-center gap-3 border border-dashed border-input py-10 text-muted-foreground transition-colors hover:text-primary print:hidden"
-        >
-          <Plus className="size-5 transition-transform group-hover:rotate-90" />
-          <span className="file-label">Weiteren Vergleich hinzufügen</span>
-        </button>
-      </main></HomeSection></HomeSections>
-
-      </div></EditingContext.Provider>
-      </SiteManager>
-      <footer className="border-t border-dashed">
-        <div className="mx-auto flex max-w-6xl flex-wrap justify-between gap-2 px-5 py-6 md:px-8">
-          <p className="file-label text-muted-foreground">Bildvergleich · Stasi-Zentrale</p>
-          <p className="file-label text-muted-foreground">Eigene Bilder einsetzen · Quellen angeben</p>
-        </div>
-      </footer>
-    </div>
+      </section>
+    </main>
   );
 }
