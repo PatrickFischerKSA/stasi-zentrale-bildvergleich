@@ -66,7 +66,7 @@ Die öffentliche Website zeigt dieselbe gemeinsame Version für alle. Ein separa
 - Cloudflare D1 speichert Texte und Dokumentversionen, R2 die Medien
 - Ohne Bearbeitungsschlüssel verweigert die API Schreibzugriffe
 - Offline-Fehler erscheinen sichtbar; ungespeicherte Eingaben bleiben im offenen Tab. Vor Schließen wird bei ausstehenden Änderungen gewarnt.
-- Frühere Browserdaten lassen sich im Bearbeitungsmodus mit **Bisherige lokale Vorlage übernehmen** ausdrücklich in die gemeinsame Version hochladen. Andere Geräte und die ursprüngliche Lovable-Domain haben eigene lokale Speicher.
+- Frühere Browserdaten lassen sich im Bearbeitungsmodus ausdrücklich in die gemeinsame Version übernehmen. Andere Geräte haben eigene lokale Zwischenspeicher.
 
 ### Backend entwickeln und veröffentlichen
 
@@ -82,17 +82,17 @@ Backend-Deployments erfolgen bewusst über einen autorisierten Cloudflare-Accoun
 
 Entfernte Medien werden aus der Ansicht entfernt; gespeicherte Medien bleiben für frühere Versionen im Bucket verfügbar. Unterstützte Dateien: JPG, PNG, WebP, GIF, AVIF sowie MP4, WebM, MOV und OGG. Bilder maximal 15 MB, Videos maximal 60 MB.
 
-Dieses Repository ist unabhängig vom ursprünglichen Lovable-Projekt und hat keine automatische Lovable-Synchronisierung.
+Dieses Repository und die veröffentlichte Projektseite werden vollständig über GitHub verwaltet.
 
 ## Projektverwaltung im Browser
 
-Der bisherige Bearbeitungslink bleibt unverändert. Über **Projekt verwalten** können Mitwirkende Unterseiten erstellen, umbenennen, sortieren und entfernen. Jede neue Seite wird automatisch in die Navigation aufgenommen. Unter **Navigation** lassen sich Menüeinträge unabhängig sortieren, umbenennen, ausblenden, entfernen und auf Seiten, externe Webadressen oder vorhandene `#abschnitt`-Ziele verweisen.
+Der geschützte Bearbeitungslink öffnet die Template-Verwaltung sofort. Dort können Mitwirkende Bilder und Videos hochladen sowie Unterseiten erstellen, umbenennen, sortieren und entfernen. Jede neue Seite wird automatisch in die Navigation aufgenommen. Unter **Navigation** lassen sich Menüeinträge unabhängig sortieren, umbenennen, ausblenden, entfernen und auf Seiten, externe Webadressen oder vorhandene `#abschnitt`-Ziele verweisen.
 
 Unterseiten und die Startseite lassen sich mit Text-, Überschriften-, Bild-, Video-, Zitat- und Trennlinien-Bausteinen aufbauen. Bausteine können umgeordnet und entfernt werden; Medien werden im eigenen Projektspeicher abgelegt. Unter **Startseite umbauen** lassen sich die vorhandenen Originalabschnitte sortieren und ausblenden. Ausgeblendete Inhalte werden nicht gelöscht. Die Abschnittsauswahl erscheint nach dem Laden der Startseite.
 
 Alle Änderungen speichern automatisch für alle. Vor dem Schliessen auf die Speicherbestätigung warten. Konflikte am selben Feld müssen aufgelöst werden. Frühere Fassungen stehen im Versionsverlauf bereit. Alte gespeicherte Stände erhalten automatisch eine Startseite, bestehende redaktionelle Inhalte bleiben bestehen. Auch ältere noch offene Browserfassungen können die neue Seitenverwaltung beim Speichern nicht entfernen.
 
-Seiten-Direktlinks verwenden `?page=<feste-id>` und bleiben beim Umbenennen gültig. Der Ansichtslink enthält keinen Bearbeitungsschlüssel. Aus dem Menü ausgeblendete Seiten bleiben über ihren Direktlink erreichbar. Die Projektverwaltung gibt keinen Zugriff auf ChatGPT, Codex, Lovable, Abonnements oder KI-Konten.
+Seiten-Direktlinks verwenden `?page=<feste-id>` und bleiben beim Umbenennen gültig. Der Ansichtslink enthält keinen Bearbeitungsschlüssel. Aus dem Menü ausgeblendete Seiten bleiben über ihren Direktlink erreichbar. Die Projektverwaltung gibt keinen Zugriff auf andere Konten oder Dienste.
 
 ### Seitenvorlagen und Startseiteneinbindung
 
