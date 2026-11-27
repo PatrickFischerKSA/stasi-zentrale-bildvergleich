@@ -1,4 +1,4 @@
-import type {ReactNode} from 'react';
+import {useRef,useState,type ReactNode} from 'react';
 import {storySections,type StoryStation} from '@/lib/story-sections';
 import {HomeSection,HomeSections} from './site-manager';
 import {sorted,type SectionLayout,type Block,type SitePage} from '@/lib/site-model';
@@ -12,10 +12,30 @@ function EditButton({block,onEdit}:{block:Block;onEdit?:Edit}){
  return onEdit?<button className="story-edit" type="button" onClick={()=>onEdit(block.id)} aria-label={'Bearbeiten: '+(block.alt||block.text).slice(0,65)}>Bearbeiten ↗</button>:null;
 }
 function Media({block,onEdit}:{block:Block;onEdit?:Edit}){
+ const lightbox=useRef<HTMLDialogElement>(null);
  return <figure className={'story-media story-media-'+block.kind+' story-width-'+(block.imageWidth||'full')} data-story-block={block.id}>
-  <div className="story-media-frame">{block.kind==='video'?<video controls playsInline preload="metadata" src={block.url} aria-label={block.alt||'Video'}/>:<img loading="lazy" src={block.url} alt={block.alt} style={{objectFit:block.imageFit||'contain',...(block.imageAspect&&block.imageAspect!=='auto'?{aspectRatio:block.imageAspect.replace(':',' / ')}:{})}}/>}</div>
+  <div className="story-media-frame">{block.kind==='video'?<video controls playsInline preload="metadata" src={block.url} aria-label={block.alt||'Video'}/>:<button type="button" className="story-image-open" aria-label={'Bild vergrößern: '+block.alt} onClick={()=>lightbox.current?.showModal()}><img loading="lazy" src={block.url} alt={block.alt} style={{objectFit:block.imageFit||'contain',...(block.imageAspect&&block.imageAspect!=='auto'?{aspectRatio:block.imageAspect.replace(':',' / ')}:{})}}/><span aria-hidden="true">Vergrößern ↗</span></button>}</div>
   {block.caption&&<figcaption><Copy text={block.caption}/></figcaption>}<EditButton block={block} onEdit={onEdit}/>
+  {block.kind==='image'&&<dialog className="story-lightbox" ref={lightbox} aria-label={'Bildansicht: '+block.alt} onClick={e=>{if(e.target===e.currentTarget)lightbox.current?.close();}}><button type="button" className="story-lightbox-close" onClick={()=>lightbox.current?.close()}>Schliessen ×</button><img src={block.url} alt={block.alt}/>{block.caption&&<p><Copy text={block.caption}/></p>}</dialog>}
  </figure>;
+}
+
+function ImageComparison({first,second,onEdit}:{first:Block;second:Block;onEdit?:Edit}){
+ const [view,setView]=useState<'first'|'second'|'both'>('both');
+ return <section className="story-comparison" aria-label="Stasi-Zentrale damals und heute vergleichen"><div className="story-comparison-controls" role="group" aria-label="Vergleichsansicht wählen">{([['first','Damals'],['second','Heute'],['both','Nebeneinander']] as const).map(([value,label])=><button type="button" key={value} aria-pressed={view===value} onClick={()=>setView(value)}>{label}</button>)}</div><div className={'story-comparison-pictures'+(view==='both'?' story-diptych':'')}><div hidden={view==='second'}><span className="story-image-label">Damals</span><Media block={first} onEdit={onEdit}/></div><div hidden={view==='first'}><span className="story-image-label">Heute</span><Media block={second} onEdit={onEdit}/></div></div></section>;
+}
+
+function ProfileFacts({block,onEdit}:{block:Block;onEdit?:Edit}){
+ const lines=block.text.split('\n').map(line=>line.trim()).filter(Boolean);
+ const bullets=lines.filter(line=>/^[-•]\s/.test(line));
+ return <div className="story-profile-facts" data-story-block={block.id}>{lines.filter(line=>!/^[-•]\s/.test(line)).map((line,i)=><p key={i}>{line}</p>)}{bullets.length>0&&<ul>{bullets.map((line,i)=><li key={i}>{line.replace(/^[-•]\s/,'')}</li>)}</ul>}<EditButton block={block} onEdit={onEdit}/></div>;
+}
+
+function CharacterProfile({station,onEdit}:{station:StoryStation;onEdit?:Edit}){
+ const portrait=station.blocks.find(b=>b.kind==='image');
+ const career=station.blocks.find(b=>b.kind==='text');
+ const rest=station.blocks.filter(b=>b!==portrait&&b!==career);
+ return <section className="story-station story-profile-section"><article className="story-wanted-poster" aria-label="Fahndungsplakat zur Romanfigur Luzy Morgenrot"><header className="story-poster-heading"><p className="story-eyebrow">Fiktion · Figurenprofil aus Kälter</p><p className="story-poster-label">Fahndungsplakat</p>{station.heading&&<div data-story-block={station.heading.id}><h3>{station.heading.text}</h3><EditButton block={station.heading} onEdit={onEdit}/></div>}</header><div className="story-poster-grid">{portrait&&<div className="story-poster-portrait"><Media block={portrait} onEdit={onEdit}/></div>}<div className="story-poster-record"><p className="story-eyebrow">Laufbahn und aktueller Auftrag</p>{career&&<ProfileFacts block={career} onEdit={onEdit}/>}<details className="story-profile-motive" open><summary>Motiv und Ziel <span aria-hidden="true">↕</span></summary>{rest.map(b=>b.kind==='text'?<ProfileFacts key={b.id} block={b} onEdit={onEdit}/>:<BodyBlock key={b.id} block={b} onEdit={onEdit}/>)}</details></div></div><footer className="story-poster-footer">Andreas Pflüger · Kälter</footer></article></section>;
 }
 function BodyBlock({block,onEdit}:{block:Block;onEdit?:Edit}){
  if(['image','video'].includes(block.kind))return <Media block={block} onEdit={onEdit}/>;
@@ -25,13 +45,14 @@ function BodyBlock({block,onEdit}:{block:Block;onEdit?:Edit}){
  </div>;
 }
 function Station({station,onEdit,dark}:{station:StoryStation;onEdit?:Edit;dark:boolean}){
+ if(station.heading?.id==='74bb283d-d082-459f-8b2e-6234bee4c265')return <CharacterProfile station={station} onEdit={onEdit}/>;
  const body:ReactNode[]=[];
  for(let i=0;i<station.blocks.length;i++){
   const block=station.blocks[i];
   // Consecutive photographs form visual comparisons rather than a stack of large images.
   if(block.kind==='image'&&station.blocks[i+1]?.kind==='image'){
    const next=station.blocks[++i];
-   body.push(<div className="story-diptych" key={block.id}><Media block={block} onEdit={onEdit}/><Media block={next} onEdit={onEdit}/></div>);
+   body.push(block.alt.includes('Ehrenformation')&&next.alt.includes('Campus')?<ImageComparison key={block.id} first={block} second={next} onEdit={onEdit}/>:<div className="story-diptych" key={block.id}><Media block={block} onEdit={onEdit}/><Media block={next} onEdit={onEdit}/></div>);
   }else body.push(<BodyBlock key={block.id} block={block} onEdit={onEdit}/>);
  }
  return <section className={'story-station'+(dark?' story-dark':'')}>
