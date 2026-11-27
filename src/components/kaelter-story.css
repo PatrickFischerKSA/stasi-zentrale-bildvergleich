@@ -13,3 +13,11 @@
 .story-station .story-width-wide{width:85%;max-width:54rem}.story-station .story-width-compact{width:60%;max-width:26rem}.story-diptych .story-width-wide,.story-diptych .story-width-compact{width:100%;max-width:none}@media(max-width:760px){.story-station .story-width-wide,.story-station .story-width-compact{width:100%}}
 
 .story-deck p{white-space:pre-line}
+
+/* The travel anecdote stays a light aside rather than competing with the novel's quotations. */
+[data-story-block="gendarmenmarkt-voci"]{max-width:45rem;padding:1.7rem 2rem;border-left:3px solid var(--orange);background:color-mix(in srgb,var(--orange) 7%,transparent);margin-block:2rem}
+[data-story-block="gendarmenmarkt-voci"]::before{display:none}
+[data-story-block="gendarmenmarkt-voci"] blockquote{font-size:clamp(1.45rem,2.5vw,2.05rem);line-height:1.35;letter-spacing:0}
+[data-story-block="gendarmenmarkt-lehrerkommentar"]{max-width:45rem;border-left:1px solid var(--color-border);padding-left:2rem}
+[data-story-block="gendarmenmarkt-lehrerkommentar"] p{font-size:.95rem}
+[data-story-block="gendarmenmarkt-lehrerkommentar"] p::first-line{font-weight:600}
